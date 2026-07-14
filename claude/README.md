@@ -75,6 +75,25 @@ skill, once with the lite shadow below. Same inputs, same instructions:
 > our A/B above, removing it cut the identical task from 246k to 58k — far more than 60k
 > saved, because the compounding went with it.
 
+## "I never installed a claude-api skill — where did this come from?"
+
+You didn't install it; it ships with Claude Code. What follows is **based on our
+observation of one installation, not official documentation.** The bundled skill's
+source is Anthropic's public skills repo — **[github.com/anthropics/skills](https://github.com/anthropics/skills)**
+(`skills/claude-api/`) — and a snapshot of it appears to be baked into each Claude Code
+release at build time, embedded in the CLI binary itself. Nothing is downloaded at use
+time: the first time the skill triggers, the CLI injects the composed SKILL.md body into
+context and unpacks the companion reference files into a per-CLI-version cache under the
+system temp dir (`<tmp>/claude-<uid>/bundled-skills/<version>/<hash>/claude-api/`) so
+they can be read individually. We hash-verified those unpacked files byte-identical to
+the upstream repo as of the release's build cut.
+
+The reason it seems to appear out of nowhere is the trigger contract in its description:
+it fires on nearly any LLM-adjacent prompt — naming any Claude model is enough — and the
+~60k injection is the first visible sign the skill exists. The upstream repo is also the
+easiest place to inspect the full bundled SKILL.md, since the temp cache contains only
+the reference files, not the injected body.
+
 ## The solution: name-shadowing + a two-tier design
 
 Claude Code's documented skill precedence makes this fixable without touching the
